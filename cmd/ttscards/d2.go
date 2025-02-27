@@ -20,14 +20,14 @@ func d2() {
 	w := 640
 	h := 1280
 
-	face := truetype.NewFace(font, &truetype.Options{Size: 300})
+	face := truetype.NewFace(font, &truetype.Options{Size: (float64(w) / 1.8)})
 
 	dc := gg.NewContext(w, h)
 	dc.SetFontFace(face)
 	dc.SetRGB(1, 1, 1)
 	dc.Clear()
 	dc.SetRGB(0, 0, 0)
-	dc.DrawStringAnchored("55", 320, 640, 0.5, 0.5)
+	dc.DrawStringAnchored("55", float64(w/2), float64(h/2), 0.5, 0.5)
 
 	//dc.SavePNG("out.png")
 

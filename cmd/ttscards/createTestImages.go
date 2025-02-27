@@ -26,7 +26,7 @@ func createTestImages(backFlag string, imageDirectoryFlag string) error {
 	}
 
 	for i := 0; i < 50; i++ {
-		makeCardImage("foo/"+strconv.Itoa(i)+".png", strconv.Itoa(i), 1, 1)
+		makeCardImage("foo/"+strconv.Itoa(i)+".png", strconv.Itoa(i), 640, 1280)
 	}
 
 	return nil
@@ -34,14 +34,15 @@ func createTestImages(backFlag string, imageDirectoryFlag string) error {
 
 func makeCardImage(filename string, text string, w, h int) {
 	// Initialize the graphic context on an RGBA image
-	dest := image.NewRGBA(image.Rect(0, 0, 64, 128))
+
+	dest := image.NewRGBA(image.Rect(0, 0, w, h))
 	gc := draw2dimg.NewGraphicContext(dest)
 
 	// Set some properties
 	gc.SetFillColor(color.RGBA{0x00, 0x00, 0x00, 0xff})
 	gc.SetStrokeColor(color.RGBA{0x44, 0x44, 0x44, 0xff})
 	//gc.SetLineWidth(5)
-	gc.SetFontSize(40)
+	gc.SetFontSize(float64(w / 2))
 	gc.SetFontData(draw2d.FontData{
 		Name: "gomono",
 	})
@@ -55,7 +56,7 @@ func makeCardImage(filename string, text string, w, h int) {
 
 	gc.Save()
 	gc.MoveTo(0, 0)
-	gc.Translate(32, 64)
+	gc.Translate(float64(w/2), float64(h/2))
 
 	gc.FillString(text)
 	gc.Close()
