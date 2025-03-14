@@ -1,10 +1,11 @@
 package main
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"log"
 	//"github.com/llgcode/draw2d/draw2dkit"
 	//"github.com/llgcode/draw2d/samples"
 	//"github.com/llgcode/draw2d/samples/gopher2"
@@ -19,22 +20,32 @@ import (
 	"strconv"
 )
 
-func createTestImages(backFlag string, imageDirectoryFlag string) error {
+func createTestImages(backFlag string, imageDirectoryFlag string, w, h int) error {
 
 	if _, err := os.Stat(imageDirectoryFlag); os.IsNotExist(err) {
-		return errors.New(imageDirectoryFlag + " does not exist")
+		err = os.MkdirAll(imageDirectoryFlag, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
-	for i := 0; i < 50; i++ {
-		makeCardImage("foo/"+strconv.Itoa(i)+".png", strconv.Itoa(i), 640, 1280)
+	for i := 0; i < 78; i++ {
+		var cardNumber string
+		if i < 10 {
+			cardNumber = "0"
+		}
+		cardNumber = cardNumber + strconv.Itoa(i)
+		makeCardImage(imageDirectoryFlag+"/"+cardNumber+".png", cardNumber, w, h)
 	}
 
 	return nil
 }
 
-func makeCardImage(filename string, text string, w, h int) {
-	// Initialize the graphic context on an RGBA image
+func makeCardImage(filename string, cardNumber string, w, h int) {
 
+	verbose(filename)
+
+	// Initialize the graphic context on an RGBA image
 	dest := image.NewRGBA(image.Rect(0, 0, w, h))
 	gc := draw2dimg.NewGraphicContext(dest)
 
@@ -56,16 +67,19 @@ func makeCardImage(filename string, text string, w, h int) {
 
 	gc.Save()
 	gc.MoveTo(0, 0)
-	gc.Translate(float64(w/2), float64(h/2))
+	gc.Translate(float64(w)/10, float64(h)/1.75)
 
-	gc.FillString(text)
+	gc.FillString(cardNumber)
 	gc.Close()
 	gc.FillStroke()
 
 	gc.Restore()
 
 	// Save to file
-	draw2dimg.SaveToPngFile(filename, dest)
+	err := draw2dimg.SaveToPngFile(filename, dest)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 }
 

@@ -12,13 +12,14 @@ import (
 )
 
 func d2() {
+	fmt.Println("d2")
 	font, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	w := 640
-	h := 1280
+	w := 600
+	h := 800
 
 	face := truetype.NewFace(font, &truetype.Options{Size: (float64(w) / 1.8)})
 
