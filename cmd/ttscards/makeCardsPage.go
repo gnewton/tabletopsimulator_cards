@@ -28,16 +28,28 @@ func makeCardsPage(args *Args) error {
 		log.Fatal(err)
 	}
 
-	w, h, err := getCardDimensions(*args.imageDirectoryFlag + "/" + files[0].Name())
+	w, h, err := getCardDimensions(*args.imageDirectoryFlag + files[0].Name())
 	log.Println(w, h)
+
+	if w**args.numColumnsOfCards > MAX_IMAGE_WIDTH {
+		return fmt.Errorf("Too many cards for width: %d columns x %d width = %d which is larger than max allowable width: %d", *args.numColumnsOfCards, w, *args.numColumnsOfCards*w, MAX_IMAGE_WIDTH)
+	}
 
 	if err != nil {
 		return err
 	}
 
+	if err := allCardsSameDimension(w, h, *args.imageDirectoryFlag, files); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func allCardsSameDimension(w, h int, path string, files []fs.DirEntry) error {
 	for _, f := range files {
-		fw, fh, err := getCardDimensions(*args.imageDirectoryFlag + "/" + f.Name())
-		log.Println(*args.imageDirectoryFlag+"/"+f.Name(), fw, fh, w, h)
+		fw, fh, err := getCardDimensions(path + f.Name())
+		log.Println(path+f.Name(), fw, fh, w, h)
 		if err != nil {
 			return err
 		}
@@ -46,7 +58,6 @@ func makeCardsPage(args *Args) error {
 			return fmt.Errorf("Dimensions do not match for file %s; Have: %d %d   Need: %d %d", f.Name(), fw, fh, w, h)
 		}
 	}
-
 	return nil
 }
 
