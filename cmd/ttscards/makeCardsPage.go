@@ -3,44 +3,78 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/llgcode/draw2d"
+	"github.com/llgcode/draw2d/draw2dimg"
+	"image/color"
+	//"github.com/llgcode/draw2d/draw2dimg/Matrix"
 	"image"
+	"image/draw"
 	"io/fs"
 	"log"
 	"os"
 )
 
 func makeCardsPage(args *Args) error {
-	log.Println("TODO: func makeCardsPage(args *Args) {")
-	log.Println(*args.imageDirectoryFlag)
 	if err := verify(args); err != nil {
 		return err
 	}
 
+	// Source card images
 	if _, err := os.Stat(*args.imageDirectoryFlag); os.IsNotExist(err) {
 		return errors.New("Image files directory (source) " + *args.imageDirectoryFlag + " does not exist.")
-
 	}
 
 	root := os.DirFS(*args.imageDirectoryFlag)
-	files, err := fs.ReadDir(root, ".")
+	cardFiles, err := fs.ReadDir(root, ".")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	w, h, err := getCardDimensions(*args.imageDirectoryFlag + files[0].Name())
-	log.Println(w, h)
+	w, h, err := getCardDimensions(*args.imageDirectoryFlag + cardFiles[0].Name())
+	if err != nil {
+		return err
+	}
 
 	if w**args.numColumnsOfCards > MAX_IMAGE_WIDTH {
 		return fmt.Errorf("Too many cards for width: %d columns x %d width = %d which is larger than max allowable width: %d", *args.numColumnsOfCards, w, *args.numColumnsOfCards*w, MAX_IMAGE_WIDTH)
 	}
 
-	if err != nil {
+	if w**args.numRowsOfCards > MAX_IMAGE_HEIGHT {
+		return fmt.Errorf("Too many cards for height: %d rows x %d height = %d which is larger than max allowable height: %d", *args.numRowsOfCards, h, *args.numRowsOfCards*h, MAX_IMAGE_HEIGHT)
+	}
+
+	if err := allCardsSameDimension(w, h, *args.imageDirectoryFlag, cardFiles); err != nil {
 		return err
 	}
 
-	if err := allCardsSameDimension(w, h, *args.imageDirectoryFlag, files); err != nil {
-		return err
+	dest := image.NewRGBA(image.Rect(0, 0, w**args.numColumnsOfCards-1, h**args.numRowsOfCards-1))
+
+	gc := draw2dimg.NewGraphicContext(dest)
+	gc.SetFillColor(color.RGBA{0xff, 0x00, 0x00, 0xff})
+	gc.MoveTo(0, 0)
+	gc.LineTo(float64(w**args.numColumnsOfCards-1), 0)
+	gc.LineTo(float64(w**args.numColumnsOfCards-1), float64(h**args.numRowsOfCards-1))
+	gc.LineTo(0, float64(h**args.numRowsOfCards-1))
+	gc.Close()
+	gc.Fill()
+
+	icard := 0
+	for j := 0; j < *args.numRowsOfCards; j++ {
+		for i := 0; i < *args.numColumnsOfCards; i++ {
+			img, err := draw2dimg.LoadFromPngFile(*args.imageDirectoryFlag + cardFiles[icard].Name())
+			if err != nil {
+				return err
+			}
+			draw2dimg.DrawImage(img, dest, draw2d.NewTranslationMatrix(float64(i*w), float64(j*h)), draw.Over, draw2dimg.LinearFilter)
+
+			icard++
+		}
+	}
+
+	err = draw2dimg.SaveToPngFile(*args.outputFlag, dest)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return nil
@@ -49,11 +83,10 @@ func makeCardsPage(args *Args) error {
 func allCardsSameDimension(w, h int, path string, files []fs.DirEntry) error {
 	for _, f := range files {
 		fw, fh, err := getCardDimensions(path + f.Name())
-		log.Println(path+f.Name(), fw, fh, w, h)
 		if err != nil {
 			return err
 		}
-		log.Println(fw != w || fh != h)
+
 		if fw != w || fh != h {
 			return fmt.Errorf("Dimensions do not match for file %s; Have: %d %d   Need: %d %d", f.Name(), fw, fh, w, h)
 		}

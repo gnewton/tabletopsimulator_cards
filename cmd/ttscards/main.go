@@ -62,11 +62,6 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println(*args.backFlag)
-	fmt.Println(*args.outputFlag)
-	fmt.Println(*args.imageDirectoryFlag)
-	fmt.Println(*args.createTestImagesFlag)
-
 	// Create test files
 	if *args.createTestImagesFlag {
 		if err := createTestImages(*args.backFlag, *args.testImageDirectoryFlag, *args.testImagesWidth, *args.testImagesHeight); err != nil {
