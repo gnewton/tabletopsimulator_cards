@@ -6,6 +6,7 @@ import (
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"log"
+	"path/filepath"
 	//"github.com/llgcode/draw2d/draw2dkit"
 	//"github.com/llgcode/draw2d/samples"
 	//"github.com/llgcode/draw2d/samples/gopher2"
@@ -21,7 +22,7 @@ import (
 )
 
 func createTestImages(backFlag string, imageDirectoryFlag string, w, h int) error {
-
+	// Test directory exist?
 	if _, err := os.Stat(imageDirectoryFlag); os.IsNotExist(err) {
 		err = os.MkdirAll(imageDirectoryFlag, 0755)
 		if err != nil {
@@ -29,7 +30,14 @@ func createTestImages(backFlag string, imageDirectoryFlag string, w, h int) erro
 		}
 	}
 
-	for i := 0; i < 78; i++ {
+	// Delete all files from test fir
+	err := DeleteDirectoryFiles(imageDirectoryFlag)
+	if err != nil {
+		return err
+	}
+
+	numCards := DEFAULT_NUM_ROWS_CARDS*DEFAULT_NUM_COLUMNS_CARDS - 1
+	for i := 0; i < numCards; i++ {
 		var cardNumber string
 		if i < 10 {
 			cardNumber = "0"
@@ -37,6 +45,8 @@ func createTestImages(backFlag string, imageDirectoryFlag string, w, h int) erro
 		cardNumber = cardNumber + strconv.Itoa(i)
 		makeCardImage(imageDirectoryFlag+"/"+cardNumber+".png", cardNumber, w, h)
 	}
+
+	makeBackImage(imageDirectoryFlag+"/"+backFlag, w, h)
 
 	return nil
 }
@@ -57,13 +67,6 @@ func makeCardImage(filename string, cardNumber string, w, h int) {
 	gc.SetFontData(draw2d.FontData{
 		Name: "gomono",
 	})
-
-	// Draw a closed shape
-	// gc.MoveTo(100, 500) // should always be called first for a new path
-	// gc.LineTo(100, -50)
-	// gc.QuadCurveTo(100, 10, 10, 10)
-	// gc.Close()
-	// gc.FillStroke()
 
 	gc.Save()
 	gc.MoveTo(0, 0)
@@ -99,6 +102,7 @@ func (fc MyFontCache) Load(fd draw2d.FontData) (*truetype.Font, error) {
 }
 
 func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	fontCache := MyFontCache{}
 
 	TTFs := map[string]([]byte){
@@ -111,10 +115,58 @@ func init() {
 	for fontName, TTF := range TTFs {
 		font, err := truetype.Parse(TTF)
 		if err != nil {
+			log.Println(err)
 			panic(err)
 		}
 		fontCache.Store(draw2d.FontData{Name: fontName}, font)
 	}
 
 	draw2d.SetFontCache(fontCache)
+}
+
+func DeleteDirectoryFiles(dir string) error {
+	files, err := filepath.Glob(dir + "/*")
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func makeBackImage(filename string, w, h int) {
+	verbose(filename)
+
+	// Initialize the graphic context on an RGBA image
+	dest := image.NewRGBA(image.Rect(0, 0, w, h))
+	gc := draw2dimg.NewGraphicContext(dest)
+
+	// Set some properties
+	gc.SetFillColor(color.RGBA{0x00, 0x00, 0x00, 0xff})
+	gc.SetStrokeColor(color.RGBA{0x44, 0x44, 0x44, 0xff})
+	//gc.SetLineWidth(5)
+	gc.SetFontSize(float64(w / 4))
+	gc.SetFontData(draw2d.FontData{
+		Name: "gomono",
+	})
+
+	gc.Save()
+	gc.MoveTo(0, 0)
+	gc.Translate(float64(w)/10, float64(h)/1.75)
+
+	gc.FillString("back")
+	gc.Close()
+	gc.FillStroke()
+
+	gc.Restore()
+
+	// Save to file
+	err := draw2dimg.SaveToPngFile(filename, dest)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }

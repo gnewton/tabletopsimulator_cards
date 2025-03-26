@@ -19,21 +19,33 @@ func makeCardsPage(args *Args) error {
 		return err
 	}
 
-	// Source card images
+	// Source card images directory
+	if _, err := os.Stat(*args.backFlag); os.IsNotExist(err) {
+		return errors.New("Image file for back not found. " + *args.backFlag + " does not exist.")
+	}
+
+	backImage, err := imageFromFilename(*args.backFlag)
+	if err != nil {
+		log.Println("Error opening back file: ", *args.backFlag)
+		return err
+	}
+
+	// Source card images directory
 	if _, err := os.Stat(*args.imageDirectoryFlag); os.IsNotExist(err) {
 		return errors.New("Image files directory (source) " + *args.imageDirectoryFlag + " does not exist.")
 	}
 
 	root := os.DirFS(*args.imageDirectoryFlag)
 	cardFiles, err := fs.ReadDir(root, ".")
-
 	if err != nil {
+		log.Println(err)
 		log.Fatal(err)
 	}
 
 	w, h, err := getCardDimensions(*args.imageDirectoryFlag + cardFiles[0].Name())
 	if err != nil {
-		return err
+		log.Println(err)
+		return nil
 	}
 
 	if w**args.numColumnsOfCards > MAX_IMAGE_WIDTH {
@@ -45,6 +57,7 @@ func makeCardsPage(args *Args) error {
 	}
 
 	if err := allCardsSameDimension(w, h, *args.imageDirectoryFlag, cardFiles); err != nil {
+		log.Printf("Image source dir=%s", *args.imageDirectoryFlag)
 		return err
 	}
 
@@ -66,15 +79,20 @@ func makeCardsPage(args *Args) error {
 			if err != nil {
 				return err
 			}
-			draw2dimg.DrawImage(img, dest, draw2d.NewTranslationMatrix(float64(i*w), float64(j*h)), draw.Over, draw2dimg.LinearFilter)
-
+			// Leave out last position for card back
+			if j != *args.numRowsOfCards-1 || i != *args.numColumnsOfCards-1 {
+				draw2dimg.DrawImage(img, dest, draw2d.NewTranslationMatrix(float64(i*w), float64(j*h)), draw.Over, draw2dimg.LinearFilter)
+			}
 			icard++
 		}
 	}
 
+	draw2dimg.DrawImage(backImage, dest, draw2d.NewTranslationMatrix(float64((*args.numColumnsOfCards-1)*w), float64((*args.numRowsOfCards-1)*h)), draw.Over, draw2dimg.LinearFilter)
+
 	err = draw2dimg.SaveToPngFile(*args.outputFlag, dest)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 
 	return nil
@@ -88,7 +106,7 @@ func allCardsSameDimension(w, h int, path string, files []fs.DirEntry) error {
 		}
 
 		if fw != w || fh != h {
-			return fmt.Errorf("Dimensions do not match for file %s; Have: %d %d   Need: %d %d", f.Name(), fw, fh, w, h)
+			return fmt.Errorf("Dimensions do not match for file %s%s; Have: %d %d   Need: %d %d", path, f.Name(), fw, fh, w, h)
 		}
 	}
 	return nil
@@ -110,6 +128,7 @@ func getCardDimensions(filename string) (int, int, error) {
 	img, err := imageFromFilename(filename)
 
 	if err != nil {
+		log.Println("Error opening card dimensions file:", filename)
 		log.Println(err)
 		return 0, 0, err
 	}
