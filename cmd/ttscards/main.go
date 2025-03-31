@@ -16,7 +16,7 @@ const MAX_IMAGE_HEIGHT = 4096
 
 const DEFAULT_CARD_WIDTH = 300
 const DEFAULT_CARD_HEIGHT = 400
-const DEFAULT_IMAGE_SOURCE = "./"
+const DEFAULT_IMAGE_SOURCE = "./source_card_images"
 const DEFAULT_TEST_IMAGE_DEST = "test_images"
 
 var VERBOSE = false
@@ -68,7 +68,7 @@ func main() {
 			log.Println(err)
 			os.Exit(1)
 		}
-		d2()
+		//d2()
 	} else {
 		// Make single image page of directory of images
 		if err := makeCardsPage(&args); err != nil {

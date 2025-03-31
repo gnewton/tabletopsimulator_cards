@@ -21,7 +21,7 @@ func makeCardsPage(args *Args) error {
 
 	// Source card images directory
 	if _, err := os.Stat(*args.backFlag); os.IsNotExist(err) {
-		return errors.New("Image file for back not found. " + *args.backFlag + " does not exist.")
+		return errors.New("Image file for back not found. \"" + *args.backFlag + "\" does not exist.")
 	}
 
 	backImage, err := imageFromFilename(*args.backFlag)
@@ -32,7 +32,7 @@ func makeCardsPage(args *Args) error {
 
 	// Source card images directory
 	if _, err := os.Stat(*args.imageDirectoryFlag); os.IsNotExist(err) {
-		return errors.New("Image files directory (source) " + *args.imageDirectoryFlag + " does not exist.")
+		return errors.New("Image files directory (source) \"" + *args.imageDirectoryFlag + "\" does not exist.")
 	}
 
 	root := os.DirFS(*args.imageDirectoryFlag)
@@ -64,13 +64,14 @@ func makeCardsPage(args *Args) error {
 	dest := image.NewRGBA(image.Rect(0, 0, w**args.numColumnsOfCards-1, h**args.numRowsOfCards-1))
 
 	gc := draw2dimg.NewGraphicContext(dest)
-	gc.SetFillColor(color.RGBA{0xff, 0x00, 0x00, 0xff})
-	gc.MoveTo(0, 0)
-	gc.LineTo(float64(w**args.numColumnsOfCards-1), 0)
-	gc.LineTo(float64(w**args.numColumnsOfCards-1), float64(h**args.numRowsOfCards-1))
-	gc.LineTo(0, float64(h**args.numRowsOfCards-1))
-	gc.Close()
-	gc.Fill()
+	gc.SetFillColor(color.RGBA{0xff, 0x80, 0xf0, 0xff})
+
+	// gc.MoveTo(0, 0)
+	// gc.LineTo(float64(w**args.numColumnsOfCards-1), 0)
+	// gc.LineTo(float64(w**args.numColumnsOfCards-1), float64(h**args.numRowsOfCards-1))
+	// gc.LineTo(0, float64(h**args.numRowsOfCards-1))
+	// gc.Close()
+	// gc.Fill()
 
 	icard := 0
 	for j := 0; j < *args.numRowsOfCards; j++ {

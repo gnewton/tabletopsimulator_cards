@@ -12,7 +12,6 @@ import (
 )
 
 func d2() {
-	fmt.Println("d2")
 	font, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		log.Fatal(err)

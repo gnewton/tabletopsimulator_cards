@@ -51,6 +51,8 @@ func createTestImages(backFlag string, imageDirectoryFlag string, w, h int) erro
 	return nil
 }
 
+var fillToggle = true
+
 func makeCardImage(filename string, cardNumber string, w, h int) {
 
 	verbose(filename)
@@ -60,8 +62,15 @@ func makeCardImage(filename string, cardNumber string, w, h int) {
 	gc := draw2dimg.NewGraphicContext(dest)
 
 	// Set some properties
-	gc.SetFillColor(color.RGBA{0x00, 0x00, 0x00, 0xff})
-	gc.SetStrokeColor(color.RGBA{0x44, 0x44, 0x44, 0xff})
+	// if fillToggle {
+	// 	gc.SetFillColor(color.RGBA{0x00, 0xff, 0x00, 0xff})
+	// 	fillToggle = false
+	// } else {
+	// 	fillToggle = true
+	// 	gc.SetFillColor(color.RGBA{0xff, 0x00, 0x00, 0xff})
+	// }
+
+	gc.SetStrokeColor(color.RGBA{0x00, 0x00, 0x00, 0xff})
 	//gc.SetLineWidth(5)
 	gc.SetFontSize(float64(w / 2))
 	gc.SetFontData(draw2d.FontData{
@@ -69,8 +78,34 @@ func makeCardImage(filename string, cardNumber string, w, h int) {
 	})
 
 	gc.Save()
+	// if fillToggle {
+	// 	gc.SetFillColor(color.RGBA{0x00, 0x00, 0xf0, 0xff})
+	// 	fillToggle = false
+	// } else {
+	// 	gc.SetFillColor(color.RGBA{0xf0, 0x00, 0x00, 0xff})
+	// 	fillToggle = true
+	// }
+
 	gc.MoveTo(0, 0)
-	gc.Translate(float64(w)/10, float64(h)/1.75)
+	gc.LineTo(float64(w), 0)
+	gc.LineTo(float64(w), float64(h))
+	gc.LineTo(0, float64(h))
+	gc.Close()
+
+	//gc.Fill()
+	gc.Save()
+	gc.SetFillColor(color.RGBA{0x00, 0xff, 0x00, 0xff})
+	gc.Fill()
+	gc.Restore()
+
+	gc.SetStrokeColor(color.RGBA{0xff, 0x00, 0x00, 0xff})
+	gc.Stroke()
+	gc.Restore()
+
+	gc.Save()
+	gc.SetFillColor(color.RGBA{0x00, 0x00, 0xff, 0xff})
+	gc.MoveTo(0, 0)
+	gc.Translate(float64(w)/10, float64(h)/1.5)
 
 	gc.FillString(cardNumber)
 	gc.Close()
